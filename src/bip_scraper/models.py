@@ -11,6 +11,14 @@ class CitySlug(StrEnum):
     CHORZOW = "chorzow"
     SWIETOCHLOWICE = "swietochlowice"
     SIEMIANOWICE = "siemianowice"
+    GLIWICE = "gliwice"
+    SOSNOWIEC = "sosnowiec"
+    RUDASLASKA = "rudaslaska"
+    ZABRZE = "zabrze"
+    BYTOM = "bytom"
+    RYBNIK = "rybnik"
+    TYCHY = "tychy"
+    DABROWAG = "dabrowa-gornicza"
 
 
 class LegalAct(BaseModel):
