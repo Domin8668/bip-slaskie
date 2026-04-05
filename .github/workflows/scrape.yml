@@ -1,0 +1,71 @@
+name: scrape
+
+on:
+  schedule:
+    - cron: "15 6 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13.7"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Sync dependencies
+        run: uv sync --all-groups
+
+      - name: Download previous snapshot artifact
+        uses: dawidd6/action-download-artifact@v9
+        continue-on-error: true
+        with:
+          workflow: scrape.yml
+          branch: main
+          name: snapshot-latest
+          path: artifacts/previous
+
+      - name: Run scraper pipeline
+        env:
+          BIP_MATTERMOST_MODE: ${{ secrets.BIP_MATTERMOST_MODE }}
+          BIP_MATTERMOST_WEBHOOK_URL: ${{ secrets.BIP_MATTERMOST_WEBHOOK_URL }}
+          BIP_MATTERMOST_API_URL: ${{ secrets.BIP_MATTERMOST_API_URL }}
+          BIP_MATTERMOST_TOKEN: ${{ secrets.BIP_MATTERMOST_TOKEN }}
+          BIP_MATTERMOST_CHANNEL_ID: ${{ secrets.BIP_MATTERMOST_CHANNEL_ID }}
+        run: |
+          PREV=artifacts/previous/snapshot.json
+          if [ ! -f "$PREV" ]; then
+            mkdir -p artifacts/previous
+            PREV=artifacts/previous/empty.json
+            printf '{"run_date":"1970-01-01","generated_at":"1970-01-01T00:00:00Z","cities":{}}' > "$PREV"
+          fi
+
+          uv run python -m bip_scraper.cli \
+            --output artifacts/current/snapshot.json \
+            --previous "$PREV" \
+            --report artifacts/current/report.json \
+            --notify
+
+      - name: Upload snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-latest
+          path: artifacts/current/snapshot.json
+          if-no-files-found: error
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-${{ github.run_id }}
+          path: artifacts/current/report.json
+          if-no-files-found: error
