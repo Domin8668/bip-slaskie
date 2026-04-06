@@ -12,17 +12,15 @@ BIP URL: https://www.bytom.pl/bip/
 
 from __future__ import annotations
 
-import html
 import re
-import time
 from datetime import UTC, datetime
-from typing import Any
 from urllib.parse import urljoin
 
-import httpx
 from bs4 import BeautifulSoup
 from pydantic import HttpUrl, TypeAdapter
 
+from bip_scraper.cities.base import BaseScraper
+from bip_scraper.cities.base import normalized_href as _normalized_href
 from bip_scraper.models import CitySlug, LegalAct
 
 BASE_URL = "https://www.bytom.pl/bip"
@@ -34,12 +32,10 @@ DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 HTTP_URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
 
 
-class BytomScraper:
+class BytomScraper(BaseScraper):
     """Scraper for the Bytom BIP council resolutions portal."""
 
-    def __init__(self, *, timeout_seconds: float = 20.0, max_retries: int = 3) -> None:
-        self.timeout_seconds = timeout_seconds
-        self.max_retries = max_retries
+    _follow_redirects = True
 
     @property
     def city(self) -> CitySlug:
@@ -64,30 +60,13 @@ class BytomScraper:
             raise RuntimeError("Bytom scraper: no legal acts parsed from session pages")
         return sorted(acts.values(), key=lambda a: a.stable_id)
 
-    def _get_text(self, url: str) -> str:
-        last_error: Exception | None = None
-        for attempt in range(self.max_retries + 1):
-            try:
-                response = httpx.get(url, timeout=self.timeout_seconds, follow_redirects=True)
-                response.raise_for_status()
-                return response.text
-            except (httpx.TimeoutException, httpx.HTTPError) as exc:
-                last_error = exc
-                if attempt >= self.max_retries:
-                    break
-                time.sleep(2)
-        raise RuntimeError(f"Bytom scraper: request failed for {url}") from last_error
-
     def _parse_year_urls(self, page_html: str, *, now: datetime) -> list[str]:
         soup = BeautifulSoup(page_html, "html.parser")
         urls: list[str] = []
         for anchor in soup.select("a[href]"):
             href = _normalized_href(anchor.get("href"))
             m = YEAR_LINK_RE.search(href)
-            if not m:
-                continue
-            year = int(m.group(1))
-            if year < now.year - 1:
+            if not m or int(m.group(1)) < now.year - 1:
                 continue
             absolute_url = urljoin(BASE_URL, href)
             if absolute_url not in urls:
@@ -155,14 +134,6 @@ class BytomScraper:
                 )
             )
         return results
-
-
-def _normalized_href(value: Any) -> str:
-    if isinstance(value, str):
-        return html.unescape(value).strip()
-    if isinstance(value, list):
-        return html.unescape(" ".join(str(v) for v in value)).strip()
-    return ""
 
 
 def _parse_date(text: str, *, fallback: datetime) -> datetime:

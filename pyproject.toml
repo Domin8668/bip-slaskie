@@ -36,6 +36,9 @@ warn_unused_configs = true
 [tool.pylint.main]
 py-version = "3.13"
 
+[tool.pylint.similarities]
+min-similarity-lines = 8
+
 [tool.pylint.messages_control]
 disable = [
   "missing-module-docstring",

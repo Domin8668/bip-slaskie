@@ -45,21 +45,15 @@ def notify_mattermost(settings: Settings, message: str) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="BIP Śląskie daily scraper and report runner"
-    )
-    parser.add_argument(
-        "--output", type=Path, required=True, help="Path to current snapshot JSON"
-    )
+    parser = argparse.ArgumentParser(description="BIP Śląskie daily scraper and report runner")
+    parser.add_argument("--output", type=Path, required=True, help="Path to current snapshot JSON")
     parser.add_argument(
         "--previous", type=Path, required=True, help="Path to previous snapshot JSON"
     )
     parser.add_argument(
         "--report", type=Path, required=True, help="Path to output daily report JSON"
     )
-    parser.add_argument(
-        "--notify", action="store_true", help="Post report to Mattermost"
-    )
+    parser.add_argument("--notify", action="store_true", help="Post report to Mattermost")
     return parser.parse_args()
 
 

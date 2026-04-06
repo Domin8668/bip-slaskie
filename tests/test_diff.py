@@ -62,9 +62,7 @@ def test_build_daily_report_counts_only_new_items() -> None:
     report = build_daily_report(current, previous)
     assert report.total_new == 1
     katowice = next(
-        city_diff
-        for city_diff in report.city_diffs
-        if city_diff.city == CitySlug.KATOWICE
+        city_diff for city_diff in report.city_diffs if city_diff.city == CitySlug.KATOWICE
     )
     assert katowice.new_count == 1
     assert katowice.new_acts[0].stable_id == "kat-2026-002"

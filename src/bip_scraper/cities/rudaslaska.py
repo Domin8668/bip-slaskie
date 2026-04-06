@@ -7,14 +7,13 @@ BIP system: bip.info.pl
 from __future__ import annotations
 
 import re
-import time
 from datetime import UTC, datetime
 from urllib.parse import urljoin
 
-import httpx
 from bs4 import BeautifulSoup
 from pydantic import HttpUrl, TypeAdapter
 
+from bip_scraper.cities.base import BaseScraper
 from bip_scraper.models import CitySlug, LegalAct
 
 BASE_URL = "https://rudaslaska.bip.info.pl"
@@ -28,12 +27,10 @@ IDMP_RE = re.compile(r"[?&]idmp=(\d+)")
 HTTP_URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
 
 
-class RudaSląskaScraper:
+class RudaSlaskaScraper(BaseScraper):
     """Scraper for the Ruda Śląska BIP council resolutions portal."""
 
-    def __init__(self, *, timeout_seconds: float = 20.0, max_retries: int = 3) -> None:
-        self.timeout_seconds = timeout_seconds
-        self.max_retries = max_retries
+    _follow_redirects = True
 
     @property
     def city(self) -> CitySlug:
@@ -59,30 +56,13 @@ class RudaSląskaScraper:
             raise RuntimeError("Ruda Slaska scraper: no legal acts found")
         return sorted(acts.values(), key=lambda a: a.stable_id)
 
-    def _get_text(self, url: str) -> str:
-        last_error: Exception | None = None
-        for attempt in range(self.max_retries + 1):
-            try:
-                response = httpx.get(url, timeout=self.timeout_seconds, follow_redirects=True)
-                response.raise_for_status()
-                return response.text
-            except (httpx.TimeoutException, httpx.HTTPError) as exc:
-                last_error = exc
-                if attempt >= self.max_retries:
-                    break
-                time.sleep(2)
-        raise RuntimeError(f"Ruda Slaska scraper: request failed for {url}") from last_error
-
     def _parse_year_urls(self, page_html: str, *, now: datetime) -> list[str]:
         soup = BeautifulSoup(page_html, "html.parser")
         urls: list[str] = []
         for anchor in soup.find_all("a", href=True):
             text = anchor.get_text(strip=True)
             m = YEAR_RE.search(text)
-            if not m:
-                continue
-            year = int(m.group(1))
-            if year < now.year - 1:
+            if not m or int(m.group(1)) < now.year - 1:
                 continue
             href = anchor["href"]
             absolute_url = urljoin(BASE_URL, href)

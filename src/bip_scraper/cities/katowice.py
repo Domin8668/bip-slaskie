@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import html
 import re
 from datetime import UTC, datetime
-from typing import Any
 from urllib.parse import parse_qs, urljoin, urlparse
 
-import httpx
 from bs4 import BeautifulSoup
 from pydantic import HttpUrl, TypeAdapter
 
+from bip_scraper.cities.base import BaseScraper
+from bip_scraper.cities.base import normalized_href as _normalized_href
 from bip_scraper.models import CitySlug, LegalAct
 
 SESSION_LIST_URL = "https://bip.katowice.eu/RadaMiasta/Uchwaly/uchwalone_ses.aspx"
@@ -18,11 +17,7 @@ DATE_RE = re.compile(r"Data:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})")
 HTTP_URL_ADAPTER = TypeAdapter(HttpUrl)
 
 
-class KatowiceScraper:
-    def __init__(self, *, timeout_seconds: float = 20.0, max_retries: int = 3) -> None:
-        self.timeout_seconds = timeout_seconds
-        self.max_retries = max_retries
-
+class KatowiceScraper(BaseScraper):
     @property
     def city(self) -> CitySlug:
         return CitySlug.KATOWICE
@@ -41,19 +36,6 @@ class KatowiceScraper:
         if not acts:
             raise RuntimeError("Katowice scraper: no legal acts parsed from session pages")
         return sorted(acts.values(), key=lambda item: item.stable_id)
-
-    def _get_text(self, url: str) -> str:
-        last_error: Exception | None = None
-        for attempt in range(self.max_retries + 1):
-            try:
-                response = httpx.get(url, timeout=self.timeout_seconds)
-                response.raise_for_status()
-                return response.text
-            except (httpx.TimeoutException, httpx.HTTPError) as exc:
-                last_error = exc
-                if attempt >= self.max_retries:
-                    break
-        raise RuntimeError(f"Katowice scraper: request failed for {url}") from last_error
 
     def _load_session_urls(self, *, limit: int) -> list[str]:
         page_html = self._get_text(SESSION_LIST_URL)
@@ -109,14 +91,6 @@ def _extract_document_id(url: str) -> str | None:
     if not identifier:
         return None
     return identifier[0]
-
-
-def _normalized_href(value: Any) -> str:
-    if isinstance(value, str):
-        return html.unescape(value).strip()
-    if isinstance(value, list):
-        return html.unescape(" ".join(str(item) for item in value)).strip()
-    return ""
 
 
 def _extract_resolution_number(text: str) -> str | None:

@@ -4,7 +4,7 @@ from bip_scraper.cities.chorzow import ChorzowScraper
 from bip_scraper.cities.dabrowa_gornicza import DabrowaGorniczaScraper
 from bip_scraper.cities.gliwice import GliwiceScraper
 from bip_scraper.cities.katowice import KatowiceScraper
-from bip_scraper.cities.rudaslaska import RudaSląskaScraper
+from bip_scraper.cities.rudaslaska import RudaSlaskaScraper
 from bip_scraper.cities.rybnik import RybnikScraper
 from bip_scraper.cities.siemianowice import SiemianowiceScraper
 from bip_scraper.cities.sosnowiec import SosnowiecScraper
@@ -19,7 +19,7 @@ ALL_CITY_SCRAPERS: tuple[CityScraper, ...] = (
     SiemianowiceScraper(),
     GliwiceScraper(),
     SosnowiecScraper(),
-    RudaSląskaScraper(),
+    RudaSlaskaScraper(),
     ZabrzeScraper(),
     BytomScraper(),
     RybnikScraper(),

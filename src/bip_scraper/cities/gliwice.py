@@ -13,13 +13,12 @@ older than ``now.year - 1``, then stop.
 from __future__ import annotations
 
 import re
-import time
 from datetime import UTC, datetime
 
-import httpx
 from bs4 import BeautifulSoup
 from pydantic import HttpUrl, TypeAdapter
 
+from bip_scraper.cities.base import BaseScraper
 from bip_scraper.models import CitySlug, LegalAct
 
 BASE_URL = "https://bip.gliwice.eu"
@@ -30,12 +29,10 @@ ACT_ID_RE = re.compile(r"/(\d+)$")
 HTTP_URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
 
 
-class GliwiceScraper:
+class GliwiceScraper(BaseScraper):
     """Scraper for the Gliwice BIP council resolutions portal."""
 
-    def __init__(self, *, timeout_seconds: float = 20.0, max_retries: int = 3) -> None:
-        self.timeout_seconds = timeout_seconds
-        self.max_retries = max_retries
+    _follow_redirects = True
 
     @property
     def city(self) -> CitySlug:
@@ -72,20 +69,6 @@ class GliwiceScraper:
             raise RuntimeError("Gliwice scraper: no legal acts found")
         return sorted(acts.values(), key=lambda a: a.stable_id)
 
-    def _get_text(self, url: str) -> str:
-        last_error: Exception | None = None
-        for attempt in range(self.max_retries + 1):
-            try:
-                response = httpx.get(url, timeout=self.timeout_seconds, follow_redirects=True)
-                response.raise_for_status()
-                return response.text
-            except (httpx.TimeoutException, httpx.HTTPError) as exc:
-                last_error = exc
-                if attempt >= self.max_retries:
-                    break
-                time.sleep(2)
-        raise RuntimeError(f"Gliwice scraper: request failed for {url}") from last_error
-
     def _has_next_page(self, page_html: str) -> bool:
         soup = BeautifulSoup(page_html, "html.parser")
         return soup.find("link", rel="next") is not None or soup.find("a", rel="next") is not None
@@ -97,43 +80,40 @@ class GliwiceScraper:
             return []
         results: list[LegalAct] = []
         for row in table.find_all("tr"):
-            opis = row.find("div", class_="uchwaly-opis")
-            if not opis:
-                continue
-            p = opis.find("p")
-            if not p:
-                continue
-            # Extract title from <strong> tag
-            strong = p.find("strong")
-            if not strong:
-                continue
-            title = strong.get_text(strip=True)
-            if "uchwała" not in title.lower():
-                continue
-            # Extract date
-            p_text = p.get_text(" ", strip=True)
-            date_match = DATE_RE.search(p_text)
-            if not date_match:
-                continue
-            published_at = datetime.strptime(date_match.group(1), "%d-%m-%Y").replace(tzinfo=UTC)
-            # Extract source URL
-            link = p.find("a", href=True)
-            if not link:
-                continue
-            href = link["href"]
-            if not href.startswith("http"):
-                href = BASE_URL + href
-            id_match = ACT_ID_RE.search(href)
-            if not id_match:
-                continue
-            act_id = id_match.group(1)
-            source_url = f"{BASE_URL}/rada-miasta/uchwaly/{act_id}"
-            results.append(
-                LegalAct(
-                    stable_id=f"gliwice-uchwala-{act_id}",
-                    title=title,
-                    published_at=published_at,
-                    source_url=HTTP_URL_ADAPTER.validate_python(source_url),
-                )
-            )
+            act = _parse_row(row)
+            if act:
+                results.append(act)
         return results
+
+
+def _parse_row(row) -> LegalAct | None:
+    opis = row.find("div", class_="uchwaly-opis")
+    p = opis.find("p") if opis else None
+    if not p:
+        return None
+    strong = p.find("strong")
+    if not strong or "uchwała" not in strong.get_text(strip=True).lower():
+        return None
+    title = strong.get_text(strip=True)
+    # Extract date
+    p_text = p.get_text(" ", strip=True)
+    date_match = DATE_RE.search(p_text)
+    if not date_match:
+        return None
+    published_at = datetime.strptime(date_match.group(1), "%d-%m-%Y").replace(tzinfo=UTC)
+    # Extract source URL
+    link = p.find("a", href=True)
+    href = link["href"] if link else ""
+    if not href.startswith("http"):
+        href = BASE_URL + href
+    id_match = ACT_ID_RE.search(href)
+    if not link or not id_match:
+        return None
+    act_id = id_match.group(1)
+    source_url = f"{BASE_URL}/rada-miasta/uchwaly/{act_id}"
+    return LegalAct(
+        stable_id=f"gliwice-uchwala-{act_id}",
+        title=title,
+        published_at=published_at,
+        source_url=HTTP_URL_ADAPTER.validate_python(source_url),
+    )

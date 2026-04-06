@@ -14,31 +14,37 @@ BIP URL: https://bip.umtychy.pl/
 
 from __future__ import annotations
 
-import html
 import re
-import time
 import warnings
 from datetime import UTC, datetime
-from typing import Any
 from urllib.parse import urljoin
 
 import httpx
 from bs4 import BeautifulSoup
 from pydantic import HttpUrl, TypeAdapter
 
+from bip_scraper.cities.base import BaseScraper
+from bip_scraper.cities.base import normalized_href as _normalized_href
 from bip_scraper.models import CitySlug, LegalAct
 
 BASE_URL = "https://bip.umtychy.pl"
 ACTS_INDEX_URL = "https://bip.umtychy.pl/uchwaly-rady-miasta"
 # Current kadencja (IX, 2024-2029) uses numeric ID 32 in the URL path
-CURRENT_KADENCJA_MONTH_RE = re.compile(
-    r"uchwaly-rady-miasta/32/(\d{4})/(\d{1,2})$"
-)
+CURRENT_KADENCJA_MONTH_RE = re.compile(r"uchwaly-rady-miasta/32/(\d{4})/(\d{1,2})$")
 ACT_ID_RE = re.compile(r"uchwaly-rady-miasta/(\d+)$")
 POLISH_MONTHS = {
-    "stycznia": 1, "lutego": 2, "marca": 3, "kwietnia": 4,
-    "maja": 5, "czerwca": 6, "lipca": 7, "sierpnia": 8,
-    "września": 9, "października": 10, "listopada": 11, "grudnia": 12,
+    "stycznia": 1,
+    "lutego": 2,
+    "marca": 3,
+    "kwietnia": 4,
+    "maja": 5,
+    "czerwca": 6,
+    "lipca": 7,
+    "sierpnia": 8,
+    "września": 9,
+    "października": 10,
+    "listopada": 11,
+    "grudnia": 12,
 }
 DATE_RE = re.compile(
     r"z\s+dnia\s+(\d{1,2})\s+(" + "|".join(POLISH_MONTHS) + r")\s+(\d{4})\s+r\.",
@@ -47,12 +53,8 @@ DATE_RE = re.compile(
 HTTP_URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
 
 
-class TychyScraper:
+class TychyScraper(BaseScraper):
     """Scraper for the Tychy BIP council resolutions portal."""
-
-    def __init__(self, *, timeout_seconds: float = 20.0, max_retries: int = 3) -> None:
-        self.timeout_seconds = timeout_seconds
-        self.max_retries = max_retries
 
     @property
     def city(self) -> CitySlug:
@@ -74,26 +76,15 @@ class TychyScraper:
             raise RuntimeError("Tychy scraper: no legal acts parsed from month pages")
         return sorted(acts.values(), key=lambda a: a.stable_id)
 
-    def _get_text(self, url: str) -> str:
-        last_error: Exception | None = None
-        for attempt in range(self.max_retries + 1):
-            try:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    response = httpx.get(
-                        url,
-                        timeout=self.timeout_seconds,
-                        follow_redirects=True,
-                        verify=False,
-                    )
-                response.raise_for_status()
-                return response.text
-            except (httpx.TimeoutException, httpx.HTTPError) as exc:
-                last_error = exc
-                if attempt >= self.max_retries:
-                    break
-                time.sleep(2)
-        raise RuntimeError(f"Tychy scraper: request failed for {url}") from last_error
+    def _make_request(self, url: str) -> httpx.Response:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return httpx.get(
+                url,
+                timeout=self.timeout_seconds,
+                follow_redirects=True,
+                verify=False,
+            )
 
     def _parse_month_urls(self, page_html: str, *, now: datetime) -> list[str]:
         soup = BeautifulSoup(page_html, "html.parser")
@@ -101,10 +92,7 @@ class TychyScraper:
         for anchor in soup.select("a[href]"):
             href = _normalized_href(anchor.get("href"))
             m = CURRENT_KADENCJA_MONTH_RE.search(href)
-            if not m:
-                continue
-            year = int(m.group(1))
-            if year < now.year - 1:
+            if not m or int(m.group(1)) < now.year - 1:
                 continue
             absolute_url = urljoin(BASE_URL, href)
             if absolute_url not in urls:
@@ -137,14 +125,6 @@ class TychyScraper:
                 )
             )
         return results
-
-
-def _normalized_href(value: Any) -> str:
-    if isinstance(value, str):
-        return html.unescape(value).strip()
-    if isinstance(value, list):
-        return html.unescape(" ".join(str(v) for v in value)).strip()
-    return ""
 
 
 def _parse_polish_date(text: str, *, fallback: datetime) -> datetime:
