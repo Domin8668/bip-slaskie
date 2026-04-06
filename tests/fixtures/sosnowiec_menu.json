@@ -1,0 +1,69 @@
+[
+  {
+    "id": "6125",
+    "targetId": 6125,
+    "link": "m,6125,prawo-lokalne.html",
+    "name": "Prawo Lokalne",
+    "parent": 7,
+    "type": "D",
+    "target": "_self",
+    "redirectUrl": null,
+    "showChildrenAsTiles": false,
+    "description": "",
+    "children": [
+      {
+        "id": "6126",
+        "targetId": 6126,
+        "link": "m,6126,uchwaly.html",
+        "name": "Uchwały",
+        "parent": 6125,
+        "type": "D",
+        "target": "_self",
+        "redirectUrl": null,
+        "showChildrenAsTiles": false,
+        "description": "",
+        "children": [
+          {
+            "id": "7314",
+            "targetId": 7314,
+            "link": "m,7314,rok-2024-ix-kadencja-rm.html",
+            "name": "Rok 2024 -IX kadencja RM",
+            "parent": 6126,
+            "type": "N",
+            "target": "_self",
+            "redirectUrl": null,
+            "showChildrenAsTiles": false,
+            "description": "",
+            "children": null
+          },
+          {
+            "id": "7374",
+            "targetId": 7374,
+            "link": "m,7374,rok-2025.html",
+            "name": "Rok 2025",
+            "parent": 6126,
+            "type": "N",
+            "target": "_self",
+            "redirectUrl": null,
+            "showChildrenAsTiles": false,
+            "description": "",
+            "children": null
+          },
+          {
+            "id": "7437",
+            "targetId": 7437,
+            "link": "m,7437,rok-2026.html",
+            "name": "Rok 2026",
+            "parent": 6126,
+            "type": "N",
+            "target": "_self",
+            "redirectUrl": null,
+            "showChildrenAsTiles": false,
+            "description": "",
+            "children": null
+          }
+        ]
+      }
+    ]
+  }
+]

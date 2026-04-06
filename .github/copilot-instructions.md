@@ -81,4 +81,21 @@ Return: summary of changes made.
 ❌ Read files (use subagent)  
 ❌ Edit/create code (use subagent)  
 ❌ Use `agentName: "Plan"` (always omit it)  
-❌ "Quick look" at files before delegating  
+❌ "Quick look" at files before delegating
+
+---
+
+## Python Toolchain
+
+Always use `uv run` to execute Python commands. Never activate the virtual
+environment manually or call interpreters/tools directly.
+
+| Instead of… | Use… |
+|---|---|
+| `python` / `python3` | `uv run python` |
+| `pytest` | `uv run pytest` |
+| `ruff check .` | `uv run ruff check .` |
+| `mypy src` | `uv run mypy src` |
+| `pylint src` | `uv run pylint src` |
+| `playwright install` | `uv run playwright install` |
+  

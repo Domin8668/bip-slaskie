@@ -1,0 +1,40 @@
+{
+  "data": [
+    {
+      "doc_id": 24175,
+      "vstcnt": 111,
+      "dscrpt": "Uchwała nr XXVI/275/25 Rady Miasta Zabrze z dnia 30 grudnia 2025 roku.",
+      "dscrpa": "W sprawie Wieloletniej Prognozy Finansowej miasta Zabrze na lata 2026-2048.",
+      "pubdat": "2026-01-05 14:39:25+01",
+      "pubuser": "Orłowski Kamil",
+      "is_favorite": false,
+      "prior_": 167,
+      "visble": true,
+      "after": false
+    },
+    {
+      "doc_id": 24174,
+      "vstcnt": 88,
+      "dscrpt": "Uchwała nr XXVI/274/25 Rady Miasta Zabrze z dnia 30 grudnia 2025 roku.",
+      "dscrpa": "W sprawie budżetu miasta Zabrze na 2026 rok.",
+      "pubdat": "2026-01-05 14:37:44+01",
+      "pubuser": "Orłowski Kamil",
+      "is_favorite": false,
+      "prior_": 166,
+      "visble": true,
+      "after": false
+    },
+    {
+      "doc_id": 24173,
+      "vstcnt": 24,
+      "dscrpt": "Uchwała nr XXVI/273/25 Rady Miasta Zabrze z dnia 30 grudnia 2025 roku.",
+      "dscrpa": "W sprawie zmiany Wieloletniej Prognozy Finansowej miasta Zabrze na lata 2025-2048.",
+      "pubdat": "2026-01-05 14:34:38+01",
+      "pubuser": "Orłowski Kamil",
+      "is_favorite": false,
+      "prior_": 165,
+      "visble": true,
+      "after": false
+    }
+  ]
+}

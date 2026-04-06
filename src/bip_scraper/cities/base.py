@@ -28,6 +28,7 @@ class BaseScraper:  # pylint: disable=too-few-public-methods
     """Shared HTTP helper for all city scrapers."""
 
     _follow_redirects: bool = False
+    _verify_ssl: bool = True
 
     def __init__(self, *, timeout_seconds: float = 20.0, max_retries: int = 3) -> None:
         self.timeout_seconds = timeout_seconds
@@ -38,6 +39,7 @@ class BaseScraper:  # pylint: disable=too-few-public-methods
             url,
             timeout=self.timeout_seconds,
             follow_redirects=self._follow_redirects,
+            verify=self._verify_ssl,
         )
 
     def _get_text(self, url: str) -> str:

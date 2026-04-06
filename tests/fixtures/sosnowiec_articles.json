@@ -1,0 +1,53 @@
+{
+  "total": 194,
+  "articles": [
+    {
+      "id": "562029",
+      "link": "a,562029,uchwala-nr-352xxii2025-rady-miejskiej-w-sosnowcu-z-dnia-18-grudnia-2025-r-w-sprawie-zmiany-miejscowe.html",
+      "columnFields": [
+        {
+          "fieldId": 22,
+          "value": "Uchwała Nr 352/XXII/2025 Rady Miejskiej w Sosnowcu z dnia 18 grudnia 2025 r."
+        },
+        {
+          "fieldId": 26,
+          "value": "2026-01-02 08:51:42"
+        }
+      ],
+      "aliasFields": [],
+      "templateAlias": null
+    },
+    {
+      "id": "562046",
+      "link": "a,562046,uchwala-nr-358xxii2025-rady-miejskiej-w-sosnowcu-z-dnia-18-grudnia-2025-r-w-sprawie-rozpatrzenia-ska.html",
+      "columnFields": [
+        {
+          "fieldId": 22,
+          "value": "Uchwała Nr 358/XXII/2025 Rady Miejskiej w Sosnowcu z dnia 18 grudnia 2025 r. w sprawie rozpatrzenia skargi"
+        },
+        {
+          "fieldId": 26,
+          "value": "2025-12-23 13:04:21"
+        }
+      ],
+      "aliasFields": [],
+      "templateAlias": null
+    },
+    {
+      "id": "562043",
+      "link": "a,562043,uchwala-nr-357xxii2025.html",
+      "columnFields": [
+        {
+          "fieldId": 22,
+          "value": "Uchwała Nr 357/XXII/2025 Rady Miejskiej w Sosnowcu z dnia 18 grudnia 2025 r."
+        },
+        {
+          "fieldId": 26,
+          "value": "2025-12-23 12:21:23"
+        }
+      ],
+      "aliasFields": [],
+      "templateAlias": null
+    }
+  ]
+}
